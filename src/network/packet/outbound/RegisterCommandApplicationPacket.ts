@@ -19,7 +19,7 @@ export class RegisterCommandApplicationPacket extends OutboundPacket<IRegisterCo
             {
                 type: BufferDataType.UInt8,
                 data: data.messageType,
-            }
+            },
             {
                 type: BufferDataType.UInt8,
                 data: data.protocolVersion,

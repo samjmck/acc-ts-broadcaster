@@ -2,9 +2,8 @@ import { Socket, createSocket } from 'dgram';
 import { OutboundMessageType } from './OutboundMessageType';
 import { getStringBuffer, BufferReader } from '../util/buffer';
 import { InboundMessageType, getInboundMessageType } from './InboundMessageType';
-import { IRegistrationResultData } from './message/inbound/IRegistrationResultData';
 import { Packet } from './packet/Packet';
-import { OutboundPacket } from './packet/outbound/OutboundPacket';
+import { IRegistrationResultData } from './packet/inbound/RegistrationResultPacket';
 
 export class BroadcasterClient {
     static protocolVersion = 2;
@@ -127,6 +126,7 @@ export class BroadcasterClient {
             switch(type) {
                 case InboundMessageType.RegistrationResult:
                     const messageData: IRegistrationResultData = {
+                        messageType: InboundMessageType.RegistrationResult,
                         connectionId: bufferReader.readUInt32LE(),
                         success: bufferReader.readUInt8() > 0,
                         isReadonly: bufferReader.readUInt8() === 0,

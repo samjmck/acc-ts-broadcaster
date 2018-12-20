@@ -17,7 +17,7 @@ export class RegistrationResultPacket extends InboundPacket<IRegistrationResultD
         {
             type: BufferDataType.UInt8,
             propertyName: 'messageType',
-        }
+        },
         {
             type: BufferDataType.UInt32LE,
             propertyName: 'connectionId',
