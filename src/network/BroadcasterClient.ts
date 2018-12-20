@@ -1,7 +1,10 @@
 import { Socket, createSocket } from 'dgram';
 import { OutboundMessageType } from './OutboundMessageType';
-import { getStringBuffer, BufferReader } from '../util/broadcasterClient';
+import { getStringBuffer, BufferReader } from '../util/buffer';
 import { InboundMessageType, getInboundMessageType } from './InboundMessageType';
+import { IRegistrationResultData } from './message/inbound/IRegistrationResultData';
+import { Packet } from './packet/Packet';
+import { OutboundPacket } from './packet/outbound/OutboundPacket';
 
 export class BroadcasterClient {
     static protocolVersion = 2;
@@ -9,6 +12,7 @@ export class BroadcasterClient {
     public connectionId: number = null;
 
     private socket: Socket;
+    private _awaitingRegistrationResult: [(value: IRegistrationResultData) => void, (error: string) => void] = null;
 
     constructor(
         public readonly clientPort: number,
@@ -18,10 +22,44 @@ export class BroadcasterClient {
         private commandPassword: string,
         public readonly displayName: string,
         public readonly updateInterval: number,
+        finishedSetup: () => void,
     ) {
         this.initialiseSocket();
         this.setupListener();
-        this.connect();
+        this.connect().then(finishedSetup);
+    }
+
+    static async create(
+        clientPort: number,
+        address: string,
+        port: number,
+        password: string,
+        commandPassword: string,
+        displayName: string,
+        updateInterval: number,
+    ): Promise<BroadcasterClient> {
+        let resolved: () => void = null;
+        const finishedSetup = new Promise((resolve, error) => {
+            resolved = resolve;
+        });
+
+        const client = new BroadcasterClient(
+            clientPort,
+            address,
+            port,
+            password,
+            commandPassword,
+            displayName,
+            updateInterval,
+            resolved,
+        );
+
+        await finishedSetup;
+        return client;
+    }
+
+    private async send(packet: Packet): Promise<void> {
+        await this.sendBuffer(packet.toBuffer());
     }
 
     private sendBuffer(buffer: Buffer): Promise<void> {
@@ -72,23 +110,43 @@ export class BroadcasterClient {
             commandPasswordBuffer,
         ]);
 
+        const awaitingRegistrationResult = new Promise<IRegistrationResultData>((resolve, error) => {
+            this._awaitingRegistrationResult = [resolve, error];
+        });
+
         this.sendBuffer(resultBuffer);
+
+        await awaitingRegistrationResult;
     }
 
     private setupListener(): void {
         this.socket.on('message', buffer => {
-            console.log(buffer.byteLength);
             const bufferReader = new BufferReader(buffer);
+
             const type = <InboundMessageType> bufferReader.readUInt8();
-            console.log(getInboundMessageType(type));
             switch(type) {
                 case InboundMessageType.RegistrationResult:
-                    this.connectionId = bufferReader.readUInt32LE();
-                    const success = bufferReader.readUInt8() > 0;
-                    const isReadonly = bufferReader.readUInt8() === 0;
-                    const errorMessage = bufferReader.readString();
+                    const messageData: IRegistrationResultData = {
+                        connectionId: bufferReader.readUInt32LE(),
+                        success: bufferReader.readUInt8() > 0,
+                        isReadonly: bufferReader.readUInt8() === 0,
+                        errorMessage: bufferReader.readString(),
+                    };
+
+                    this.connectionId = messageData.connectionId;
+
+                    if(messageData.success) {
+                        this._awaitingRegistrationResult[0](messageData);
+                    } else {
+                        this._awaitingRegistrationResult[1](messageData.errorMessage);
+                    }
+
                     break;
                 case InboundMessageType.EntryList:
+                    bufferReader.readUInt32LE(); // connection id
+
+                    const carEntryCount = bufferReader.readUInt16LE();
+
                     break;
             }
         });
