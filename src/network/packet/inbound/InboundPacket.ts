@@ -9,8 +9,6 @@ export interface IInboundPacketData extends IPacketData {
 export abstract class InboundPacket<DataType extends IInboundPacketData> extends Packet {
     private bufferReader: BufferReader;
 
-    // protected abstract descriptions: IReadBufferDescription[];
-
     constructor(protected buffer: Buffer) {
         super();
         this.bufferReader = new BufferReader(buffer);
@@ -19,10 +17,6 @@ export abstract class InboundPacket<DataType extends IInboundPacketData> extends
     toBuffer(): Buffer {
         return this.buffer;
     }
-
-    // fromBuffer(): DataType {
-    //     return fromBuffer(this.buffer, this.descriptions);
-    // }
 
     protected abstract getData(bufferReader: BufferReader): DataType;
 
