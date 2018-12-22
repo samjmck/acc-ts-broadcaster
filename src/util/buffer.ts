@@ -29,14 +29,32 @@ export class BufferReader {
         return number;
     }
 
+    readInt8(): number {
+        const number = this.buffer.readInt8(this.bytePosition);
+        this.bytePosition += 1;
+        return number;
+    }
+
     readUInt16LE(): number {
         const number = this.buffer.readUInt16LE(this.bytePosition);
         this.bytePosition += 2;
         return number;
     }
 
+    readInt16LE(): number {
+        const number = this.buffer.readInt16LE(this.bytePosition);
+        this.bytePosition += 2;
+        return number;
+    }
+
     readUInt32LE(): number {
         const number = this.buffer.readUInt32LE(this.bytePosition);
+        this.bytePosition += 4;
+        return number;
+    }
+
+    readInt32LE(): number {
+        const number = this.buffer.readInt32LE(this.bytePosition);
         this.bytePosition += 4;
         return number;
     }
@@ -127,6 +145,13 @@ export class BufferWriter {
         return this;
     }
 
+    writeInt8(value: number): BufferWriter {
+        const buffer = Buffer.alloc(1);
+        buffer.writeInt8(value, 0);
+        this.buffers.push(buffer);
+        return this;
+    }
+
     writeUInt16LE(value: number): BufferWriter {
         const buffer = Buffer.alloc(2);
         buffer.writeUInt16LE(value, 0);
@@ -134,9 +159,23 @@ export class BufferWriter {
         return this;
     }
 
+    writeInt16LE(value: number): BufferWriter {
+        const buffer = Buffer.alloc(2);
+        buffer.writeInt16LE(value, 0);
+        this.buffers.push(buffer);
+        return this;
+    }
+
     writeUInt32LE(value: number): BufferWriter {
         const buffer = Buffer.alloc(4);
         buffer.writeUInt32LE(value, 0);
+        this.buffers.push(buffer);
+        return this;
+    }
+
+    writeInt32LE(value: number): BufferWriter {
+        const buffer = Buffer.alloc(4);
+        buffer.writeInt32LE(value, 0);
         this.buffers.push(buffer);
         return this;
     }
