@@ -48,7 +48,7 @@ export class RealtimeUpdatePacket extends InboundPacket<IRealtimeUpdatePacketDat
         const sessionTime = bufferReader.readFloatLE();
         const sessionEndTime = bufferReader.readFloatLE();
 
-        const focusedCarIndex = bufferReader.readUInt32LE();
+        const focusedCarIndex = bufferReader.readInt32LE();
 
         const activeCameraSet = bufferReader.readString();
         const activeCamera = bufferReader.readString();
@@ -59,7 +59,7 @@ export class RealtimeUpdatePacket extends InboundPacket<IRealtimeUpdatePacketDat
         const replay: IReplay = isReplayPlaying ? {
             sessionTime: bufferReader.readFloatLE(),
             remainingTime: bufferReader.readFloatLE(),
-            focusedCar: bufferReader.readUInt32LE(),
+            focusedCar: bufferReader.readInt32LE(),
         } : null;
 
         const timeOfDay = bufferReader.readUInt16LE();

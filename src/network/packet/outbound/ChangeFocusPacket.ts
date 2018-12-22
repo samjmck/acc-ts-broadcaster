@@ -14,7 +14,7 @@ export class ChangeFocusPacket extends OutboundPacket<IChangeFocusPacketData> {
     getBuffer(bufferWriter: BufferWriter, data: IChangeFocusPacketData) {
         bufferWriter
             .writeUInt8(data.messageType)
-            .writeUInt32LE(data.connectionId);
+            .writeInt32LE(data.connectionId);
 
         if(data.carIndex === null) {
             bufferWriter.writeUInt8(0);

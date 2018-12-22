@@ -16,10 +16,10 @@ export class InstantReplayRequestPacket extends OutboundPacket<IInstantReplayReq
     getBuffer(bufferWriter: BufferWriter, data: IInstantReplayRequestPacketData) {
         bufferWriter
             .writeUInt8(data.messageType)
-            .writeUInt32LE(data.connectionId)
+            .writeInt32LE(data.connectionId)
             .writeFloatLE(data.startSessionTime)
             .writeFloatLE(data.duration)
-            .writeUInt32LE(data.initialFocusedCarIndex) // could be 16bit?
+            .writeInt32LE(data.initialFocusedCarIndex) // could be 16bit?
             .writeString(data.initialCameraSet)
             .writeString(data.initialCamera);
 

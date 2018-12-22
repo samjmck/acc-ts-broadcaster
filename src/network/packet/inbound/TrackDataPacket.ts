@@ -12,11 +12,11 @@ export interface ITrackDataPacketData extends IInboundPacketData {
 export class TrackDataPacket extends InboundPacket<ITrackDataPacketData> {
     getData(bufferReader: BufferReader) {
         const messageType = bufferReader.readUInt8();
-        const connectionId = bufferReader.readUInt32LE();
+        const connectionId = bufferReader.readInt32LE();
 
         const trackName = bufferReader.readString();
-        const trackId = bufferReader.readUInt32LE();
-        const trackMeters = bufferReader.readUInt32LE();
+        const trackId = bufferReader.readInt32LE();
+        const trackMeters = bufferReader.readInt32LE();
 
         const cameraSets: CameraSets = {};
         const cameraSetCount = bufferReader.readUInt8();

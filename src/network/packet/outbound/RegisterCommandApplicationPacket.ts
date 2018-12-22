@@ -18,7 +18,7 @@ export class RegisterCommandApplicationPacket extends OutboundPacket<IRegisterCo
             .writeUInt8(data.protocolVersion)
             .writeString(data.displayName)
             .writeString(data.password)
-            .writeUInt32LE(data.updateInterval)
+            .writeInt32LE(data.updateInterval)
             .writeString(data.commandPassword);
 
         return bufferWriter.buffer;

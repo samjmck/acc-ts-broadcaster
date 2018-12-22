@@ -14,7 +14,7 @@ export class RegistrationResultPacket extends InboundPacket<IRegistrationResultD
     protected getData(bufferReader: BufferReader) {
         return {
             messageType: bufferReader.readUInt8(),
-            connectionId: bufferReader.readUInt32LE(),
+            connectionId: bufferReader.readInt32LE(),
             success: bufferReader.readUInt8() === 1,
             isReadonly: bufferReader.readUInt8() === 0,
             errorMessage: bufferReader.readString(),

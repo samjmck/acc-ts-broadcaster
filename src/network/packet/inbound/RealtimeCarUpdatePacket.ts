@@ -51,7 +51,7 @@ export class RealtimeCarUpdatePacket extends InboundPacket<IRealtimeCarUpdatePac
 
         const laps = bufferReader.readUInt16LE();
 
-        const delta = bufferReader.readUInt32LE();
+        const delta = bufferReader.readInt32LE();
 
         const bestSessionLap = bufferReader.readLap();
         const lastLap = bufferReader.readLap();

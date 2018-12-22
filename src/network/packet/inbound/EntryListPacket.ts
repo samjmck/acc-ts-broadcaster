@@ -14,7 +14,7 @@ export interface IEntryListPacketData extends IInboundPacketData {
 export class EntryListPacket extends InboundPacket<IEntryListPacketData> {
     getData(bufferReader: BufferReader) {
         const messageType = bufferReader.readUInt8();
-        const connectionId = bufferReader.readUInt32LE();
+        const connectionId = bufferReader.readInt32LE();
 
         const carEntryCount = bufferReader.readUInt16LE();
         const carEntryIndexes: number[] = [];

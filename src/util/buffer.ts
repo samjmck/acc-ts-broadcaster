@@ -78,14 +78,14 @@ export class BufferReader {
     }
 
     readLap(): ILap {
-        let milliseconds = this.readUInt32LE();
+        let milliseconds = this.readInt32LE();
         const carIndex = this.readUInt16LE();
         const driverIndex = this.readUInt16LE();
 
         const splitCount = this.readUInt8();
         const splits: number[] = [];
         for(let i = 0; i < splitCount; i++) {
-            splits.push(this.readUInt32LE());
+            splits.push(this.readInt32LE());
         }
 
         const isInvalid = this.readBoolean();

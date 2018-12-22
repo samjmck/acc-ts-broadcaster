@@ -19,7 +19,7 @@ export class EntryListCarPacket extends InboundPacket<IEntryListCarPacketData> {
         const carInfo: ICarInfo = {
             modelType: bufferReader.readUInt8(),
             teamName: bufferReader.readString(),
-            raceNumber: bufferReader.readUInt32LE(),
+            raceNumber: bufferReader.readInt32LE(),
             teamCarName: bufferReader.readString(),
             displayName: bufferReader.readString(),
             cupCategory: bufferReader.readUInt8(),
