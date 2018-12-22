@@ -113,6 +113,54 @@ export class BufferReader {
     }
 }
 
+export class BufferWriter {
+    private buffers: Buffer[] = [];
+
+    get buffer(): Buffer {
+        return Buffer.concat(this.buffers);
+    }
+
+    writeUInt8(value: number): BufferWriter {
+        const buffer = Buffer.alloc(1);
+        buffer.writeUInt8(value, 0);
+        this.buffers.push(buffer);
+        return this;
+    }
+
+    writeUInt16LE(value: number): BufferWriter {
+        const buffer = Buffer.alloc(2);
+        buffer.writeUInt16LE(value, 0);
+        this.buffers.push(buffer);
+        return this;
+    }
+
+    writeUInt32LE(value: number): BufferWriter {
+        const buffer = Buffer.alloc(4);
+        buffer.writeUInt32LE(value, 0);
+        this.buffers.push(buffer);
+        return this;
+    }
+
+    writeBoolean(value: boolean): BufferWriter {
+        const buffer = Buffer.alloc(1);
+        buffer.writeUInt8(value ? 1 : 0, 0);
+        this.buffers.push(buffer);
+        return this;
+    }
+
+    writeString(value: string): BufferWriter {
+        this.buffers.push(getStringBuffer(value));
+        return this;
+    }
+
+    writeFloatLE(value: number): BufferWriter {
+        const buffer = Buffer.alloc(4);
+        buffer.writeFloatLE(value, 0);
+        this.buffers.push(buffer);
+        return this;
+    }
+}
+
 export enum BufferDataType {
     UInt8,
     UInt16LE,
@@ -160,6 +208,8 @@ export function toBuffer(descriptions: IWriteBufferDescription[]): Buffer {
                 buffer.writeFloatLE(<number> data, 0);
                 break;
         }
+
+        buffers.push(buffer);
     }
 
     return Buffer.concat(buffers);
