@@ -1,9 +1,14 @@
 import { Socket, createSocket } from 'dgram';
 import { OutboundMessageType } from './OutboundMessageType';
-import { getStringBuffer, BufferReader } from '../util/buffer';
-import { InboundMessageType, getInboundMessageType } from './InboundMessageType';
+import { InboundMessageType } from './InboundMessageType';
 import { Packet } from './packet/Packet';
-import { IRegistrationResultData } from './packet/inbound/RegistrationResultPacket';
+import { IRegistrationResultData, RegistrationResultPacket } from './packet/inbound/RegistrationResultPacket';
+import { RegisterCommandApplicationPacket } from './packet/outbound/RegisterCommandApplicationPacket';
+import { EntryListPacket } from './packet/inbound/EntryListPacket';
+import { EntryListCarPacket } from './packet/inbound/EntryListCarPacket';
+import { RealtimeUpdatePacket } from './packet/inbound/RealtimeUpdatePacket';
+import { RealtimeCarUpdatePacket } from './packet/inbound/RealtimeCarUpdatePacket';
+import { TrackDataPacket } from './packet/inbound/TrackDataPacket';
 
 export class BroadcasterClient {
     static protocolVersion = 2;
@@ -85,68 +90,55 @@ export class BroadcasterClient {
     }
 
     private async connect(): Promise<void> {
-        // alloc 2 bytes for UInt8 for message type and protocol version (first byte is always message type)
-        const initialBuffer = Buffer.alloc(2);
-        // UInt8 --> unsigned 8-bit integer --> 0-255
-        // offset 0, start from start
-        initialBuffer.writeUInt8(OutboundMessageType.RegisterCommandApplication, 0);
-        initialBuffer.writeUInt8(BroadcasterClient.protocolVersion, 1);
-
-        const displayNameBuffer = getStringBuffer(this.displayName);
-        const passwordBuffer = getStringBuffer(this.password);
-
-        // alloc 4 bytes for 32-bit (4 x 8-bits) buffer
-        const updateIntervalBuffer = Buffer.alloc(4);
-        updateIntervalBuffer.writeUInt32LE(this.updateInterval, 0);
-
-        const commandPasswordBuffer = getStringBuffer(this.commandPassword);
-
-        const resultBuffer = Buffer.concat([
-            initialBuffer,
-            displayNameBuffer,
-            passwordBuffer,
-            updateIntervalBuffer,
-            commandPasswordBuffer,
-        ]);
+        const packet = new RegisterCommandApplicationPacket({
+            messageType: OutboundMessageType.RegisterCommandApplication,
+            protocolVersion: BroadcasterClient.protocolVersion,
+            displayName: this.displayName,
+            password: this.password,
+            updateInterval: this.updateInterval,
+            commandPassword: this.commandPassword,
+        });
 
         const awaitingRegistrationResult = new Promise<IRegistrationResultData>((resolve, error) => {
             this._awaitingRegistrationResult = [resolve, error];
         });
 
-        this.sendBuffer(resultBuffer);
+        this.send(packet);
 
         await awaitingRegistrationResult;
     }
 
     private setupListener(): void {
         this.socket.on('message', buffer => {
-            const bufferReader = new BufferReader(buffer);
-
-            const type = <InboundMessageType> bufferReader.readUInt8();
+            let data = null;
+            let packet = null;
+            const type = <InboundMessageType> buffer.readUInt8(0);
             switch(type) {
                 case InboundMessageType.RegistrationResult:
-                    const messageData: IRegistrationResultData = {
-                        messageType: InboundMessageType.RegistrationResult,
-                        connectionId: bufferReader.readUInt32LE(),
-                        success: bufferReader.readUInt8() > 0,
-                        isReadonly: bufferReader.readUInt8() === 0,
-                        errorMessage: bufferReader.readString(),
-                    };
+                    data = new RegistrationResultPacket(buffer).fromBuffer();
 
-                    this.connectionId = messageData.connectionId;
+                    this.connectionId = data.connectionId;
 
-                    if(messageData.success) {
-                        this._awaitingRegistrationResult[0](messageData);
+                    if(data.success) {
+                        this._awaitingRegistrationResult[0](data);
                     } else {
-                        this._awaitingRegistrationResult[1](messageData.errorMessage);
+                        this._awaitingRegistrationResult[1](data.errorMessage);
                     }
-
                     break;
                 case InboundMessageType.EntryList:
-                    bufferReader.readUInt32LE(); // connection id
-
-                    const carEntryCount = bufferReader.readUInt16LE();
-
+                    packet = new EntryListPacket(buffer);
+                    break;
+                case InboundMessageType.EntryListCar:
+                    packet = new EntryListCarPacket(buffer);
+                    break;
+                case InboundMessageType.RealtimeUpdate:
+                    packet = new RealtimeUpdatePacket(buffer);
+                    break;
+                case InboundMessageType.RealtimeCarUpdate:
+                    packet = new RealtimeCarUpdatePacket(buffer);
+                    break;
+                case InboundMessageType.TrackData:
+                    packet = new TrackDataPacket(buffer);
                     break;
             }
         });

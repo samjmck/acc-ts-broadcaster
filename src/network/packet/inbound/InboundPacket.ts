@@ -1,5 +1,5 @@
 import { Packet, IPacketData } from '../Packet';
-import { IReadBufferDescription, fromBuffer, BufferDataType } from '../../../util/buffer';
+import { BufferReader } from '../../../util/buffer';
 import { InboundMessageType } from '../../InboundMessageType';
 
 export interface IInboundPacketData extends IPacketData {
@@ -7,19 +7,26 @@ export interface IInboundPacketData extends IPacketData {
 }
 
 export abstract class InboundPacket<DataType extends IInboundPacketData> extends Packet {
-    abstract messageType: InboundMessageType;
+    private bufferReader: BufferReader;
 
-    protected abstract descriptions: IReadBufferDescription[];
+    // protected abstract descriptions: IReadBufferDescription[];
 
     constructor(protected buffer: Buffer) {
         super();
+        this.bufferReader = new BufferReader(buffer);
     }
 
-    toBuffer() {
+    toBuffer(): Buffer {
         return this.buffer;
     }
 
+    // fromBuffer(): DataType {
+    //     return fromBuffer(this.buffer, this.descriptions);
+    // }
+
+    protected abstract getData(bufferReader: BufferReader): DataType;
+
     fromBuffer(): DataType {
-        return fromBuffer(this.buffer, this.descriptions);
+        return this.getData(this.bufferReader);
     }
 }

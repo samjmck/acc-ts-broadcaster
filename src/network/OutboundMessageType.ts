@@ -26,5 +26,9 @@ export function getOutboundMessageType(type: OutboundMessageType): string {
             return 'ChangeFocus';
         case OutboundMessageType.InstantReplayRequest:
             return 'InstantReplayRequest';
+        // case OutboundMessageType.PlayManualReplayHighlight:
+        //     return 'PlayManualReplayHighlight';
+        // case OutboundMessageType.SaveManualReplayHighlight:
+        //     return 'SaveManualReplayHighlight';
     }
 }

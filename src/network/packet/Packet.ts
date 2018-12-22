@@ -8,8 +8,6 @@ export interface IPacketData {
 }
 
 export abstract class Packet {
-    abstract messageType: MessageType;
-
     abstract fromBuffer(): object;
     abstract toBuffer(): Buffer;
 }

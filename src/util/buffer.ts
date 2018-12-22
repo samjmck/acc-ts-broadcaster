@@ -1,3 +1,6 @@
+import { LapType } from '../network/packet/inbound/enum/LapType';
+import { ILap } from '../network/packet/inbound/interface/ILap';
+
 export function getStringBuffer(string: string): Buffer {
     const stringByteLength = Buffer.byteLength(string, 'utf8');
 
@@ -49,6 +52,65 @@ export class BufferReader {
         this.bytePosition += length;
         return string;
     }
+
+    readFloatLE(): number {
+        const number = this.buffer.readFloatLE(this.bytePosition);
+        this.bytePosition += 4;
+        return number;
+    }
+
+    readLap(): ILap {
+        let milliseconds = this.readUInt32LE();
+        const carIndex = this.readUInt16LE();
+        const driverIndex = this.readUInt16LE();
+
+        const splitCount = this.readUInt8();
+        const splits: number[] = [];
+        for(let i = 0; i < splitCount; i++) {
+            splits.push(this.readUInt32LE());
+        }
+
+        const isInvalid = this.readBoolean();
+        const isValidForBest = this.readBoolean();
+
+        const isOutLap = this.readBoolean();
+        const isInLap = this.readBoolean();
+
+        let type: LapType = null;
+        if(isOutLap) {
+            type = LapType.Outlap;
+        } else if(isInLap) {
+            type = LapType.Inlap;
+        } else {
+            type = LapType.Regular;
+        }
+
+        // this code could be c# specific - need to double check
+        while(splits.length < 3) {
+            splits.push(null);
+        }
+
+        const max32Int = 2147483647;
+        for(let i = 0; i < splits.length; i++) {
+            if(splits[i] === max32Int) { // max 32 bit int value
+                splits[i] = null;
+            }
+        }
+
+        if(milliseconds === max32Int) {
+            milliseconds = null;
+        }
+
+        return {
+            milliseconds,
+            carIndex,
+            driverIndex,
+            isInvalid,
+            isValidForBest,
+            splits,
+            type,
+        };
+    }
 }
 
 export enum BufferDataType {
@@ -57,6 +119,7 @@ export enum BufferDataType {
     UInt32LE,
     String,
     Boolean,
+    FloatLE,
 }
 
 export interface IWriteBufferDescription {
@@ -91,6 +154,10 @@ export function toBuffer(descriptions: IWriteBufferDescription[]): Buffer {
             case BufferDataType.Boolean:
                 buffer = Buffer.alloc(1);
                 buffer.writeUInt8((<boolean> data) ? 1 : 0, 0);
+                break;
+            case BufferDataType.FloatLE:
+                buffer = Buffer.alloc(4);
+                buffer.writeFloatLE(<number> data, 0);
                 break;
         }
     }
@@ -128,6 +195,9 @@ export function fromBuffer<T extends object>(buffer: Buffer, descriptions: IRead
                 break;
             case BufferDataType.Boolean:
                 value = bufferReader.readBoolean();
+                break;
+            case BufferDataType.FloatLE:
+                value = bufferReader.readFloatLE();
                 break;
         }
 
