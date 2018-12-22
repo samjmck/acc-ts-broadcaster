@@ -111,7 +111,7 @@ export class BroadcasterClient {
     private setupListener(): void {
         this.socket.on('message', buffer => {
             let data = null;
-            let packet = null;
+            let packet: Packet = null;
             const type = <InboundMessageType> buffer.readUInt8(0);
             switch(type) {
                 case InboundMessageType.RegistrationResult:
